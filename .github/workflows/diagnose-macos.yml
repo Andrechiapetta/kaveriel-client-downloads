@@ -1,0 +1,31 @@
+name: diagnose native macOS distribution policy
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: fetch exact verified candidate packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 36928081352 --repo Andrechiapetta/kaveriel-client-downloads --name verified-native-macos-r2 --dir candidate
+      - name: capture policy and library diagnostics before XQuartz
+        run: python3 scripts/diagnose_macos.py candidate before-xquartz
+      - name: install the documented player prerequisite
+        run: brew install --cask xquartz
+      - name: repeat diagnostics on unchanged packages
+        run: python3 scripts/diagnose_macos.py candidate after-xquartz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: native-macos-policy-diagnostics
+          path: candidate/policy-*.json
+          retention-days: 2
+          if-no-files-found: error
