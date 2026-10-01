@@ -1,0 +1,28 @@
+name: finalize native macOS packages
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: fetch existing public release inputs
+        run: |
+          mkdir input output
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 180 -o input/arm64.zip https://github.com/Andrechiapetta/kaveriel-client-downloads/releases/download/v1.1.0/Kaveriel-1.1.0-macos-arm64.zip
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 180 -o input/x64.zip https://github.com/Andrechiapetta/kaveriel-client-downloads/releases/download/v1.1.0/Kaveriel-1.1.0-macos-x64.zip
+      - name: seal and verify complete bundles without changing the signed game seed
+        run: |
+          python3 scripts/finalize_macos.py --input input/arm64.zip --sha256 b8053458e148d42863061886d62295aba59be673ba1016b563260fa7eaab80fd --platform macos-arm64 --output output
+          python3 scripts/finalize_macos.py --input input/x64.zip --sha256 e731dcabc645b993e3314e1d70699722435f1d9dbff42a934f6459a33f045b1e --platform macos-x64 --output output
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verified-native-macos-r2
+          path: output/
+          retention-days: 1
+          if-no-files-found: error
