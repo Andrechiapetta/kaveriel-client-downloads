@@ -6,6 +6,7 @@ import json
 from pathlib import Path, PurePosixPath
 import platform
 import plistlib
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -92,6 +93,8 @@ def finalize(source, expected_sha, target, output):
         # Ad-hoc integrity is not Developer ID/notarization. Record this assessment
         # without misrepresenting an expected Gatekeeper policy rejection as success.
         gatekeeper = capture('/usr/sbin/spctl', '--assess', '--type', 'execute', '--verbose=4', str(app))
+        policy_tool = shutil.which('syspolicy_check')
+        distribution = capture(policy_tool, 'distribution', str(app)) if policy_tool else {'available': False}
         subprocess.run(['/usr/bin/ditto', '-c', '-k', '--sequesterRsrc', '--keepParent',
                         str(app), str(destination.resolve())], check=True)
         reopened = stage / 'reopened'
@@ -106,6 +109,7 @@ def finalize(source, expected_sha, target, output):
                   'sha256': sha256(destination), 'beforeBundleVerification': before,
                   'afterBundleVerification': verified, 'archiveRoundtripVerification': roundtrip,
                   'identity': identity, 'gatekeeperAssessment': gatekeeper,
+                  'distributionAssessment': distribution,
                   'developerIdSigned': False, 'notarized': False,
                   'gameSeedUnchanged': True, 'payloadFiles': original['files'],
                   'manifestSha256': original['manifestSha256']}
