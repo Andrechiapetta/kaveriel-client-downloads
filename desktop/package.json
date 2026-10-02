@@ -1,0 +1,60 @@
+{
+  "name": "kaveriel-player",
+  "version": "1.2.0",
+  "description": "Kaveriel para macOS: cliente web do jogador em uma janela própria",
+  "author": {
+    "name": "Kaveriel",
+    "url": "https://kaveriel.com.br"
+  },
+  "homepage": "https://kaveriel.com.br",
+  "license": "MIT",
+  "private": true,
+  "main": "app/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "dist": "electron-builder --mac zip --arm64 --x64 --publish never",
+    "dist:mac": "electron-builder --mac zip --arm64 --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "br.com.kaveriel.player",
+    "productName": "Kaveriel",
+    "copyright": "Copyright © 2026 Kaveriel",
+    "asar": true,
+    "files": [
+      "app/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "onlyLoadAppFromAsar": true,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "grantFileProtocolExtraPrivileges": false
+    },
+    "mac": {
+      "target": [
+        "zip"
+      ],
+      "artifactName": "Kaveriel-${version}-mac-web-${arch}.${ext}",
+      "category": "public.app-category.role-playing-games",
+      "icon": "assets/icon.png",
+      "identity": "-",
+      "hardenedRuntime": true,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Kaveriel usa o microfone somente quando você grava uma mensagem de áudio no jogo."
+      }
+    }
+  }
+}
