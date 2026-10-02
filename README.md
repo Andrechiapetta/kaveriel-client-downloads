@@ -1,25 +1,19 @@
-# Kaveriel — OTClient nativo
+# Kaveriel — clientes do jogador
 
-Download gratuito do cliente do jogador em **https://kaveriel.com.br/downloads**.
+Downloads gratuitos em **https://kaveriel.com.br/downloads**.
 
-A distribuição 1.1.0 usa o OTClient C++ 13.40, com motor e arquivos do jogo instalados no computador. Use a mesma conta, personagens, Fichas, Créditos e Premium do Kaveriel. O navegador continua disponível como outra opção. O aplicativo não contém Electron ou Chromium.
+- **Windows e Linux:** OTClient nativo 1.1.0. Instaladores completos e atualização dos arquivos do jogo por assinatura Ed25519 e SHA-256.
+- **macOS:** app 1.2.0 baseado no cliente web em Electron, para Apple silicon e Intel. Não precisa do XQuartz. Extraia o ZIP e arraste Kaveriel para Aplicativos. A primeira abertura baixa os arquivos do jogo; o cache permite reutilizá-los nas próximas aberturas.
+- **Navegador:** continua disponível em https://kaveriel.com.br/play, com a mesma conta e mundo.
 
-Este repositório publica instaladores, fonte correspondente, instruções e SHA-256. Os pacotes são somente do jogador: não incluem Aren, controladores de residentes, radar privado, credenciais de banco ou chaves administrativas.
+Windows x64: execute o instalador por usuário, sem administrador. Linux x64: pacote .deb para Ubuntu 22.04+/Debian 12+ ou pasta portátil; requer glibc 2.35, GLEW 2.2 e OpenGL/X11/XWayland.
 
-## Instalação
+O app Mac tem assinatura ad-hoc, sem Developer ID/notarização. Windows também não possui certificado de editor. Confira origem e SHA-256 antes de abrir. No Mac, siga a [aprovação individual indicada pela Apple](https://support.apple.com/pt-br/102445) se necessário; mantenha as proteções do sistema ativas. Não há garantia de abertura em todo Mac: build e teste de inicialização no CI não substituem gameplay em máquina física.
 
-- **Windows 10/11 x64:** execute o instalador `.exe`. Instala por usuário, sem exigir administrador, e cria atalhos.
-- **macOS 15+:** instale o [XQuartz gratuito](https://www.xquartz.org/) e encerre a sessão do Mac uma vez. Extraia o ZIP para Apple silicon ou Intel e mova `Kaveriel.app` para Aplicativos. Este motor nativo usa X11/GLX e depende do XQuartz.
-- **Linux x64:** instale o `.deb` em Ubuntu 22.04+, Debian 12+ ou sistema compatível. A alternativa portátil é o `.tar.gz`: extraia e execute `Kaveriel` dentro da pasta. Precisa de glibc 2.35, GLEW 2.2, OpenGL e X11/XWayland.
+Hotkeys e preferências ficam no perfil local de cada aplicativo ou navegador, separados das atualizações. O minimapa é salvo ao deslogar pelo jogo. Esses dados não são sincronizados entre computadores. Voz está disponível no navegador e no app Mac; ainda não no nativo Windows/Linux.
 
-Windows ainda não tem certificado de editor. Os motores Mac têm assinatura ad-hoc, sem Developer ID ou notarização. O sistema pode avisar na primeira abertura. No Mac, consulte a [orientação da Apple](https://support.apple.com/pt-br/102445) para autorizar somente este aplicativo após conferir a origem. Mantenha as proteções do sistema ativas.
+O conteúdo web é atualizado ao abrir, reutilizando os pacotes inalterados. Atualizar o próprio executável Electron exige baixar uma nova versão do app. Isso não promete redução de ping ou aumento de FPS. Os downloads ficam no GitHub, fora da VM do jogo.
 
-Confira tamanho e SHA-256 na página oficial ou no arquivo `SHA256SUMS` da release. O fonte correspondente está no arquivo `Kaveriel-1.1.0-native-source.tar.gz`; licenças do OTClient, launcher e bibliotecas acompanham a distribuição.
+Os pacotes são apenas do jogador: não incluem Aren, residentes, radar privado, credenciais ou chaves administrativas. O fonte do app Mac está em `desktop/`; detalhes e testes em [desktop/README.md](desktop/README.md). O fonte do OTClient nativo e suas licenças acompanham a release 1.1.0.
 
-## Atualizações e preferências
-
-O instalador já inclui os sprites e módulos. Ao abrir, o launcher verifica a assinatura Ed25519 da versão e baixa somente arquivos do jogo alterados, incluindo o motor C++. Cada arquivo é conferido pelo SHA-256 antes da ativação. O pequeno launcher recebe novas versões pelo instalador oficial.
-
-Hotkeys e opções ficam no perfil local, separado do navegador e das atualizações. Lembrar o e-mail é opcional; a senha e a sessão ficam somente em memória. A conexão ao Kaveriel usa HTTPS/WSS com TLS pela porta 443.
-
-Economia, Store, Bless, Premium e viagens usam os módulos públicos do Kaveriel. Mensagens de voz ainda estão disponíveis apenas no navegador.
+O pacote nativo Mac 1.1.0 com XQuartz permanece apenas como histórico: apresentou falha gráfica no M3/macOS Tahoe, sem comprovação de compatibilidade nos demais Macs. Prefira os novos arquivos mac-web ou o navegador.

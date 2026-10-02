@@ -1,0 +1,82 @@
+name: mac web player packages
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/player-desktop.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            platform: mac
+            arch: arm64
+            command: npx electron-builder --mac zip --arm64 --publish never
+          # Rosetta exercises x64 startup; it does not validate an Intel GPU.
+          # Experimental publication is authorized; physical Mac gameplay is
+          # still unverified and must not be advertised as tested compatibility.
+          - runner: macos-15
+            platform: mac
+            arch: x64
+            command: npx electron-builder --mac zip --x64 --publish never
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      KAVERIEL_BUILD_ARCH: ${{ matrix.arch }}
+    defaults:
+      run:
+        working-directory: desktop
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.18.0
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - if: matrix.platform == 'mac' && matrix.arch == 'x64'
+        run: arch -x86_64 /usr/bin/true || softwareupdate --install-rosetta --agree-to-license
+      - run: ${{ matrix.command }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # No certificate/secrets: ad-hoc Mac signing must also run on PRs.
+          CSC_FOR_PULL_REQUEST: 'true'
+      - run: node tools/verify-package.cjs
+      - name: verify the delivered ZIP after extraction
+        run: |
+          set -euo pipefail
+          app_dir="dist/${{ matrix.arch == 'arm64' && 'mac-arm64' || 'mac' }}"
+          mv "$app_dir/Kaveriel.app" "$RUNNER_TEMP/Kaveriel-before-zip.app"
+          ditto -x -k "dist/Kaveriel-1.2.0-mac-web-${{ matrix.arch }}.zip" "$app_dir"
+          node tools/verify-package.cjs
+      - if: matrix.platform == 'mac'
+        run: codesign --verify --deep --strict "dist/${{ matrix.arch == 'arm64' && 'mac-arm64' || 'mac' }}/Kaveriel.app"
+      - name: verify the delivered Mac ZIP
+        if: matrix.platform == 'mac'
+        run: |
+          package_version=$(node -p 'require("./package.json").version')
+          package_app="dist/${{ matrix.arch == 'arm64' && 'mac-arm64' || 'mac' }}/Kaveriel.app"
+          package_zip="dist/Kaveriel-${package_version}-mac-web-${{ matrix.arch }}.zip"
+          test -f "$package_zip"
+          package_backup=$(mktemp -d "$RUNNER_TEMP/kaveriel-package-XXXXXX")
+          trap 'rm -rf "$package_backup"' EXIT
+          mv "$package_app" "$package_backup/Kaveriel.app"
+          ditto -x -k "$package_zip" "$(dirname "$package_app")"
+          node tools/verify-package.cjs
+          codesign --verify --deep --strict "$package_app"
+      - run: node tools/smoke.cjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: player-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            desktop/dist/Kaveriel-*.zip
+            desktop/dist/*.log
+            desktop/dist/package-verification.json
+          if-no-files-found: error
+          retention-days: 7

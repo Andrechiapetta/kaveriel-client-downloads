@@ -1,0 +1,13 @@
+const fs = require('node:fs');
+const { spawn } = require('node:child_process');
+const paths = require('./paths.cjs');
+const log = fs.createWriteStream(`dist/smoke-${process.platform}-${paths().arch}.log`);
+const args = ['--kaveriel-smoke'];
+if (process.env.KAVERIEL_CI_SOFTWARE_RENDERING === '1') args.push('--use-gl=angle', '--use-angle=swiftshader-webgl', '--enable-unsafe-swiftshader');
+const child = spawn(process.argv[2] || paths().exe, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+let passed = false, output = '';
+child.stdout.on('data', data => { log.write(data); process.stdout.write(data); output = (output + String(data)).slice(-16384); if (output.includes('"passed":true')) passed = true; });
+child.stderr.on('data', data => { log.write(data); process.stderr.write(data); });
+const timer = setTimeout(() => { console.error('Desktop smoke timed out'); child.kill(); }, 240000);
+child.on('error', error => { clearTimeout(timer); log.end(); console.error(error); process.exitCode = 1; });
+child.on('exit', code => { clearTimeout(timer); log.end(); if (code !== 0 || !passed) process.exitCode = 1; });
