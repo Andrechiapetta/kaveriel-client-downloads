@@ -1,2 +1,4 @@
 desktop/node_modules/
 desktop/dist/
+__pycache__/
+*.py[cod]
